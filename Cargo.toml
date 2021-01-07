@@ -1,12 +1,16 @@
 [package]
-name = "dbar"
-version = "0.1.0"
 authors = ["James Kalyan <michaeljameskalyan@gmail.com>"]
-edition = "2018"
-description = "A simple, graphical, dynamic value-picker bar inspired by dmenu"
-homepage = "https://github.com/mjkalyan/dbar"
-license = "GPL-3.0"
 categories = ["command-line-utilities"]
+description = "A simple, dynamic value-picker bar inspired by dmenu"
+documentation = "https://github.com/mjkalyan/dbar"
+edition = "2018"
+homepage = "https://github.com/mjkalyan/dbar"
+keywords = ["bar", "dmenu", "cli", "simple", "suckless"]
+license = "GPL-3.0"
+name = "dbar"
+readme = "README.org"
+repository = "https://github.com/mjkalyan/dbar"
+version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

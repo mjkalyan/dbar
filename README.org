@@ -1,4 +1,5 @@
-#+TITLE: dbar - A simple, graphical, dynamic value-picker bar inspired by dmenu
+#+TITLE: dbar
+A simple, dynamic value-picker bar inspired by dmenu
 
 * TODO Installation
 ** Gentoo
