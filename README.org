@@ -1,0 +1,11 @@
+#+TITLE: dbar - A simple, graphical, dynamic value-picker bar inspired by dmenu
+
+* TODO Installation
+** Gentoo
+** Cargo
+* TODO Usage
+* TODO Dependencies
+* License
+dbar is distributed under the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GPL]].
+* Author
+*M. James Kalyan* - contact by [[mailto:james@searchforzero.com][email]]
