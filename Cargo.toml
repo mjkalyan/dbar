@@ -3,6 +3,10 @@ name = "dbar"
 version = "0.1.0"
 authors = ["James Kalyan <michaeljameskalyan@gmail.com>"]
 edition = "2018"
+description = "A simple, graphical, dynamic value-picker bar inspired by dmenu"
+homepage = "https://github.com/mjkalyan/dbar"
+license = "GPL-3.0"
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
