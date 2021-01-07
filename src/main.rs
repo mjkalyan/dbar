@@ -11,7 +11,7 @@ use structopt::StructOpt;
 
 // command line options
 #[derive(StructOpt)]
-#[structopt(about = "Visually select a value in the given range: [<start>, <end>]")]
+#[structopt(about = "Use left click to select a value in the given (inclusive) range [<start>, <end>]. ESC to cancel.")]
 struct Options {
     // TODO handle -negative input
     #[structopt(default_value = "0")]
@@ -78,7 +78,7 @@ pub fn main() -> Result<(), String> {
         canvas.set_draw_color(string_to_color(&opt.bg_col[..]).unwrap());
         canvas.clear();
         canvas.set_draw_color(string_to_color(&opt.fg_col[..]).unwrap());
-        canvas.fill_rect(Rect::new(0, 0, (events.mouse_state().x() + 1) as u32, opt.height));
+        canvas.fill_rect(Rect::new(0, 0, (events.mouse_state().x() + 1) as u32, opt.height)).expect("failed to draw rectangle");
         canvas.present();
 
         std::thread::sleep(Duration::from_millis(10));
