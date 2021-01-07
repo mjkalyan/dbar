@@ -11,8 +11,9 @@ use structopt::StructOpt;
 
 // command line options
 #[derive(StructOpt)]
-#[structopt(about = "Visually select a value in the given range: [START, END]")]
+#[structopt(about = "Visually select a value in the given range: [<start>, <end>]")]
 struct Options {
+    // TODO handle -negative input
     #[structopt(default_value = "0")]
     start: f32,
     #[structopt(default_value = "100")]
@@ -21,6 +22,7 @@ struct Options {
     continuous: bool,
     #[structopt(short, long, help = "Do not round the result to the nearest integer")]
     floating: bool,
+    // TODO maybe make default size based on screen dpi and make these flags percent of display rather than pixels
     #[structopt(short = "x", long, default_value = "600", help = "Width of the window")]
     width: u32,
     #[structopt(short = "y", long, default_value = "50", help = "Height of the window")]
@@ -96,7 +98,7 @@ fn string_to_color(hex_code: &str) -> Result<Color, std::num::ParseIntError> {
 
 fn calc_and_output_result(floating: bool, width: u32, start: f32, end: f32, x: i32) -> () {
     let range = (end - start).abs();
-    let result = start + range * (x as f32 / width as f32);
+    let result = start + range * (x as f32 / (width-1) as f32); // need width-1 because we count the 0th pixel
     if floating { println!("{}", result); }
-    else { println!("{}", (result) as i32); }
+    else { println!("{}", (result.round())); }
 }
