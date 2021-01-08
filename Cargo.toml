@@ -12,8 +12,6 @@ readme = "README.org"
 repository = "https://github.com/mjkalyan/dbar"
 version = "0.1.0"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 sdl2 = ">=0.34.3"
 structopt = ">=0.3.13"

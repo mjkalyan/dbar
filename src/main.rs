@@ -64,10 +64,9 @@ pub fn main() -> Result<(), String> {
         .position_centered()
         .build()
         .map_err(|e| e.to_string())?;
-    // Let's create a Canvas which we will use to draw in our Window
+
     let mut canvas : WindowCanvas = window.into_canvas()
-        .present_vsync() //< this means the screen cannot
-        // render faster than your display rate (usually 60Hz or 144Hz)
+        .present_vsync()
         .build().unwrap();
 
     // grab window/capture mouse
