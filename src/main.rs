@@ -72,6 +72,7 @@ pub fn main() -> Result<(), String> {
     // grab window/capture mouse
     sdl_context.mouse().set_relative_mouse_mode(true);
 
+    let mut first_draw = true;
     'running: loop {
         for event in events.poll_iter() {
             match event {
@@ -89,11 +90,14 @@ pub fn main() -> Result<(), String> {
             }
         }
 
-        canvas.set_draw_color(string_to_color(&opt.bg_col[..]).unwrap());
-        canvas.clear();
-        canvas.set_draw_color(string_to_color(&opt.fg_col[..]).unwrap());
-        canvas.fill_rect(Rect::new(0, 0, (events.mouse_state().x() + 1) as u32, opt.height)).expect("failed to draw rectangle");
-        canvas.present();
+        if (events.relative_mouse_state().x() != 0) | first_draw {
+            first_draw = false;
+            canvas.set_draw_color(string_to_color(&opt.bg_col[..]).unwrap());
+            canvas.clear();
+            canvas.set_draw_color(string_to_color(&opt.fg_col[..]).unwrap());
+            canvas.fill_rect(Rect::new(0, 0, (events.mouse_state().x() + 1) as u32, opt.height)).expect("failed to draw rectangle");
+            canvas.present();
+        }
 
         std::thread::sleep(Duration::from_millis(10));
     }
