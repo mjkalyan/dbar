@@ -18,39 +18,46 @@ extern crate sdl2;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
-use sdl2::render::WindowCanvas;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
+use sdl2::render::WindowCanvas;
+use std::process::Command;
 use std::time::Duration;
 use structopt::StructOpt;
 
-// command line options
+// Command line options
 #[derive(StructOpt)]
 #[structopt(about = "Use left click to select a value in the given (inclusive) range [<start>, <end>]. ESC to cancel.")]
 struct Options {
     // TODO handle -negative input
     #[structopt(default_value = "0")]
     start: f32,
+
     #[structopt(default_value = "100")]
     end: f32,
-    #[structopt(short, long, help = "Print the selected value to stdout continuously")]
-    continuous: bool,
+
+    #[structopt(short, long, default_value = "", help = "A string representing a shell command that will be run when the dbar value changes. Occurrences of `%v` in <command> will be replaced with dbar's current value.")]
+    command: String,
+
     #[structopt(short, long, help = "Do not round the result to the nearest integer")]
     floating: bool,
+
     // TODO maybe make default size based on screen dpi and make these flags percent of display rather than pixels
     #[structopt(short = "x", long, default_value = "600", help = "Width of the window")]
     width: u32,
+
     #[structopt(short = "y", long, default_value = "50", help = "Height of the window")]
     height: u32,
-    #[structopt(long, default_value = "#333355", help = "The background colour in #rrggbb hex format")]
+
+    #[structopt(long, default_value = "#222244", help = "The background colour in #rrggbb hex format")]
     bg_col: String,
+
     #[structopt(long, default_value = "#aaaaff", help = "The foreground (bar) colour in #rrggbb hex format")]
     fg_col: String,
 }
 
 pub fn main() -> Result<(), String> {
-    // parse command line options
-    let opt = Options::from_args();
+    let opt = Options::from_args(); // Parse command line options
     // TODO sanitize input:
     // - start must be smaller than end
     // - width and height must be greater than 0
@@ -85,24 +92,46 @@ pub fn main() -> Result<(), String> {
                     mouse_btn: MouseButton::Left,
                     x,
                     ..
-                } => { calc_and_output_result(opt.floating, opt.width, opt.start, opt.end, x); break 'running },
+                } => { println!("{}", calc_result(opt.floating, opt.width, opt.start, opt.end, x)); break 'running },
                 _ => {},
             }
         }
 
+
+        // If the mouse moved or this is the first iteration
         if (events.relative_mouse_state().x() != 0) | first_draw {
             first_draw = false;
+
+            // Render the bar...
             canvas.set_draw_color(string_to_color(&opt.bg_col[..]).unwrap());
             canvas.clear();
             canvas.set_draw_color(string_to_color(&opt.fg_col[..]).unwrap());
             canvas.fill_rect(Rect::new(0, 0, (events.mouse_state().x() + 1) as u32, opt.height)).expect("failed to draw rectangle");
             canvas.present();
+
+            // ...and execute the user command if it was provided
+            if opt.command.len() > 0 {
+                let current_cmd =
+                    &opt.command.replace("%v", &calc_result(opt.floating, opt.width, opt.start, opt.end, events.mouse_state().x()).to_string());
+                Command::new("sh")
+                    .arg("-c")
+                    .arg(current_cmd)
+                    .spawn()
+                    .expect("failed to run user command");
+            }
         }
 
         std::thread::sleep(Duration::from_millis(10));
     }
 
     Ok(())
+}
+
+fn calc_result(floating: bool, width: u32, start: f32, end: f32, x: i32) -> f32 {
+    let range = (end - start).abs();
+    let result = start + range * (x as f32 / (width-1) as f32); // need width-1 because we count the 0th pixel
+    if floating { result }
+    else { result.round() }
 }
 
 // Parses a color hex code of the form '#rRgGbB..' into sdl2::pixels::Color
@@ -112,11 +141,4 @@ fn string_to_color(hex_code: &str) -> Result<Color, std::num::ParseIntError> {
     let b: u8 = u8::from_str_radix(&hex_code[5..7], 16)?;
 
     Ok(Color::RGB(r, g, b))
-}
-
-fn calc_and_output_result(floating: bool, width: u32, start: f32, end: f32, x: i32) -> () {
-    let range = (end - start).abs();
-    let result = start + range * (x as f32 / (width-1) as f32); // need width-1 because we count the 0th pixel
-    if floating { println!("{}", result); }
-    else { println!("{}", (result.round())); }
 }
