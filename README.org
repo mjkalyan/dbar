@@ -4,8 +4,43 @@ A simple, dynamic value-picker bar inspired by dmenu
 * TODO Installation
 ** Gentoo
 ** Cargo
+* About
+I've always thought small utilities which are easily integrated into scripts or chained together with other utilities to achieve varying tasks were a joy to use. Many shell utilities work like this - but, sadly, not many graphical programs share the same philosophy.
+
+=dbar= is just a slider bar. It merely writes the selected value to stdout and, if using the =--command= / =-c= option, continuously plugs its current value into a user-defined shell command. It's up to you, the user, to decide what they want to do with the output or what command to give =dbar= to run.
 * TODO Usage
+When in doubt, run =dbar -h= for a complete overview of the available commands.
+
+There are 2 main ways to use =dbar=:
+
+1. Dynamically run a shell command every time the =dbar= value changes
+2. Statically choose a value to plug into another program
+
+My guess is most users will be looking for the first functionality as it provides a smooth slider experience, but there are some times you just want to pick a value once or you want to avoid recomputing a command a bunch of times.
+** Using dbar dynamically
+The =--command= or =-c= option expects a string which is just text that will be entered into a shell after dbar replaces any occurances of =%v= with the current bar value. Concretely, =dbar -c "echo %v"= will print the current value of the bar (in between 0 and 100 inclusively by default) whenever the mouse moves horizontally.
+
+*** Examples
+Set the volume for your default device using =amixer=.
+#+begin_src sh
+dbar -c "amixer -D pulse set Master %v
+#+end_src
+** Using dbar statically
+*** Examples
+Assign ratings to a film list file on a 1-10 scale.
+#+begin_src sh
+echo -e "shrek\nshrek 2\nshrek 3" > films.txt
+while read line
+    do
+          echo "$line rating: $(dbar 1 10)" >> ratings.txt
+    done < films.txt
+#+end_src
 * TODO Dependencies
+* TODO TODOS
+- make the shell a user choice or choose proper fallbacks for cross-platform use.
+- add the option to set the xtitle
+- add the option to display some text on the bar
+- add the option to output display the current value on the bar (maybe with percentage based positions, so 0% 0% would be the top left of the bar, 50% 50% would be the middle of the bar, 0% -10% would be somewhere above the bar left-aligned)
 * License
 dbar is distributed under the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GPL]].
 * Author
