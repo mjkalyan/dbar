@@ -54,6 +54,9 @@ struct Options {
 
     #[structopt(long, default_value = "#aaaaff", help = "The foreground (bar) colour in #rrggbb hex format")]
     fg_col: String,
+
+    #[structopt(long, help = "Do not capture/grab the mouse cursor")]
+    no_mouse_capture: bool,
 }
 
 pub fn main() -> Result<(), String> {
@@ -76,8 +79,10 @@ pub fn main() -> Result<(), String> {
         .present_vsync()
         .build().unwrap();
 
-    // grab window/capture mouse
-    sdl_context.mouse().set_relative_mouse_mode(true);
+    // Conditionally grab window/capture mouse
+    if ! opt.no_mouse_capture {
+        sdl_context.mouse().set_relative_mouse_mode(true);
+    }
 
     let mut first_draw = true;
     'running: loop {
