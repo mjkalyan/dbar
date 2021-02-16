@@ -5,34 +5,36 @@ A simple, dynamic value-picker bar inspired by dmenu
 ** Gentoo
 ** Cargo
 * About
-I've always thought small utilities which are easily integrated into scripts or chained together with other utilities to achieve varying tasks were a joy to use. Many shell utilities work like this - but, sadly, not many graphical programs share the same philosophy.
+I've always thought simple utilities which are easily integrated into scripts or chained together with other utilities were a joy to use. Many text-based shell utilities work like this - but, sadly, not many graphical programs share the same philosophy.
 
-=dbar= is just a slider bar. It merely writes the selected value to stdout and, if using the =--command= / =-c= option, continuously plugs its current value into a user-defined shell command. It's up to you, the user, to decide what they want to do with the output or what command to give =dbar= to run.
+/dbar/ is born of the idea that graphical programs can be simple and modular like a typical command line utility.
+
+/dbar/ is just a slider bar. It merely writes the selected value to stdout and, if using the =--command= / =-c= option, continuously plugs its current value into a user-defined shell command. It's up to you, the user, to decide what they want to do with the output or what command to give /dbar/ to run.
 * TODO Usage
 When in doubt, run =dbar -h= for a complete overview of the available commands.
 
-There are 2 main ways to use =dbar=:
+There are 2 main ways to use /dbar/:
 
-1. Dynamically run a shell command every time the =dbar= value changes
+1. Dynamically run a shell command every time the /dbar/ value changes
 2. Statically choose a value to plug into another program
 
 My guess is most users will be looking for the first functionality as it provides a smooth slider experience, but there are some times you just want to pick a value once or you want to avoid recomputing a command a bunch of times.
 ** Using dbar dynamically
-The =--command= or =-c= option expects a string which is just text that will be entered into a shell after dbar replaces any occurances of =%v= with the current bar value. Concretely, =dbar -c "echo %v"= will print the current value of the bar (in between 0 and 100 inclusively by default) whenever the mouse moves horizontally.
+The =--command= or =-c= option expects a string which is just text that will be entered into a shell after /dbar/ replaces any occurances of =%v= with the current bar value. Concretely, =dbar -c "echo %v"= will print the current value of the bar (in between 0 and 100 inclusively by default) whenever the mouse moves horizontally.
 
 *** Examples
-Set the volume for your default device using =amixer=.
+Set the Pulseaudio master volume using [[https://github.com/cdemoulins/pamixer][pamixer]]:
 #+begin_src sh
-dbar -c "amixer -D pulse set Master %v%"
+dbar -i "0.$(pamixer --get-volume)" -c "pamixer --set-volume %v"
 #+end_src
 ** Using dbar statically
 *** Examples
-Assign ratings to a film list file on a 1-10 scale.
+Assign a rating to each film in a file:
 #+begin_src sh
 echo -e "shrek\nshrek 2\npuss in boots" > films.txt
 while read line
     do
-        echo "$line rating:" $(dbar 1 6 -t "Rate the movie: $line") "golden eggs">> ratings.txt
+        echo "$line rating:" $(dbar 1 6 -t "Rate the movie: $line") "golden eggs" >> ratings.txt
     done < films.txt
 #+end_src
 * TODO Dependencies
@@ -41,6 +43,6 @@ while read line
 - add the option to display some text on the bar
 - add the option to output display the current value on the bar (maybe with percentage based positions, so 0% 0% would be the top left of the bar, 50% 50% would be the middle of the bar, 0% -10% would be somewhere above the bar left-aligned)
 * License
-dbar is distributed under the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GPL]].
+/dbar/ is distributed under the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GPL]].
 * Author
 *M. James Kalyan* - contact by [[mailto:james@searchforzero.com][email]]
