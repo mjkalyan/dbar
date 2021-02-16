@@ -52,7 +52,7 @@ struct Options {
     #[structopt(long, default_value = "#222244", help = "The background colour in #rrggbb hex format")]
     bg_col: String,
 
-    #[structopt(long, default_value = "#aaaaff", help = "The foreground (bar) colour in #rrggbb hex format")]
+    #[structopt(long, default_value = "#9c99c3", help = "The bar colour in #rrggbb hex format")]
     fg_col: String,
 
     #[structopt(long, help = "Do not capture/grab the mouse cursor")]
