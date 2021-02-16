@@ -29,16 +29,15 @@ dbar -c "amixer -D pulse set Master %v%"
 *** Examples
 Assign ratings to a film list file on a 1-10 scale.
 #+begin_src sh
-echo -e "shrek\nshrek 2\nshrek 3" > films.txt
+echo -e "shrek\nshrek 2\npuss in boots" > films.txt
 while read line
     do
-          echo "$line rating: $(dbar 1 10)" >> ratings.txt
+        echo "$line rating:" $(dbar 1 6 -t "Rate the movie: $line") "golden eggs">> ratings.txt
     done < films.txt
 #+end_src
 * TODO Dependencies
 * TODO TODOS
 - make the shell a user choice or choose proper fallbacks for cross-platform use.
-- add the option to set the xtitle
 - add the option to display some text on the bar
 - add the option to output display the current value on the bar (maybe with percentage based positions, so 0% 0% would be the top left of the bar, 50% 50% would be the middle of the bar, 0% -10% would be somewhere above the bar left-aligned)
 * License

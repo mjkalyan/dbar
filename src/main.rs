@@ -27,7 +27,7 @@ use structopt::StructOpt;
 
 // Command line options
 #[derive(StructOpt)]
-#[structopt(about = "Use left click to select a value in the given (inclusive) range [<start>, <end>]. ESC to cancel.")]
+#[structopt(about = "Just a slider bar. Left click to select a value in the given (inclusive) range from <start> to <end>. Continuously execute a command with --command. ESC to cancel.")]
 struct Options {
     // TODO handle -negative input
     #[structopt(default_value = "0")]
