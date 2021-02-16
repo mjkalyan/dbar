@@ -86,7 +86,7 @@ pub fn main() -> Result<(), String> {
         .build().unwrap();
 
     // Conditionally grab window/capture mouse
-    if ! opt.no_mouse_capture {
+    if !opt.no_mouse_capture {
         sdl_context.mouse().set_relative_mouse_mode(true);
     }
 
@@ -132,7 +132,7 @@ pub fn main() -> Result<(), String> {
             canvas.present();
 
             // ...and execute the user command if it was provided
-            if opt.command.len() > 0 {
+            if !opt.command.is_empty() {
                 let current_cmd =
                     &opt.command.replace("%v", &calc_result(opt.floating, opt.width, opt.start, opt.end, fill_pixels).to_string());
                 Command::new("sh")
