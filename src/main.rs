@@ -59,7 +59,10 @@ struct Options {
     no_mouse_capture: bool,
 
     #[structopt(short, long, default_value = "0.5", help = "The initial percentage of the bar filled as a float ∈ [0.0, 1.0]")]
-    initial_percent: f32
+    initial_percent: f32,
+
+    #[structopt(short, long, default_value = "dbar", help = "The window title")]
+    title: String,
 }
 
 pub fn main() -> Result<(), String> {
@@ -73,7 +76,7 @@ pub fn main() -> Result<(), String> {
     let video_subsystem = sdl_context.video()?;
     let mut events = sdl_context.event_pump()?;
     let window = video_subsystem
-        .window("dbar", opt.width, opt.height)
+        .window(&opt.title, opt.width, opt.height)
         .position_centered()
         .build()
         .map_err(|e| e.to_string())?;
