@@ -57,6 +57,9 @@ struct Options {
 
     #[structopt(long, help = "Do not capture/grab the mouse cursor")]
     no_mouse_capture: bool,
+
+    #[structopt(short, long, default_value = "0.5", help = "The initial percentage of the bar filled as a float ∈ [0.0, 1.0]")]
+    initial_percent: f32
 }
 
 pub fn main() -> Result<(), String> {
@@ -84,6 +87,7 @@ pub fn main() -> Result<(), String> {
         sdl_context.mouse().set_relative_mouse_mode(true);
     }
 
+    let mut fill_pixels = 0;
     let mut first_draw = true;
     'running: loop {
         for event in events.poll_iter() {
@@ -102,22 +106,33 @@ pub fn main() -> Result<(), String> {
             }
         }
 
-
         // If the mouse moved or this is the first iteration
-        if (events.relative_mouse_state().x() != 0) | first_draw {
-            first_draw = false;
+        let mouse_movement = events.relative_mouse_state().x();
+        if (mouse_movement != 0) | first_draw {
+
+            if first_draw { // On 1st iteration, compute bar fill from initial %
+                first_draw = false;
+                fill_pixels = (opt.initial_percent * opt.width as f32) as i32;
+            } else if opt.no_mouse_capture {
+                fill_pixels = events.mouse_state().x();
+            } else {        // otherwise compute using mouse movement
+                fill_pixels = fill_pixels + mouse_movement;
+                fill_pixels = if fill_pixels > opt.width as i32 { opt.width as i32 }
+                              else if fill_pixels < 0 { 0 }
+                              else { fill_pixels }
+            }
 
             // Render the bar...
             canvas.set_draw_color(string_to_color(&opt.bg_col[..]).unwrap());
             canvas.clear();
             canvas.set_draw_color(string_to_color(&opt.fg_col[..]).unwrap());
-            canvas.fill_rect(Rect::new(0, 0, (events.mouse_state().x() + 1) as u32, opt.height)).expect("failed to draw rectangle");
+            canvas.fill_rect(Rect::new(0, 0, (fill_pixels) as u32, opt.height)).expect("failed to draw rectangle");
             canvas.present();
 
             // ...and execute the user command if it was provided
             if opt.command.len() > 0 {
                 let current_cmd =
-                    &opt.command.replace("%v", &calc_result(opt.floating, opt.width, opt.start, opt.end, events.mouse_state().x()).to_string());
+                    &opt.command.replace("%v", &calc_result(opt.floating, opt.width, opt.start, opt.end, fill_pixels).to_string());
                 Command::new("sh")
                     .arg("-c")
                     .arg(current_cmd)
