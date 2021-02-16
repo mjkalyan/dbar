@@ -99,9 +99,8 @@ pub fn main() -> Result<(), String> {
                 | Event::Quit { .. } => break 'running,
                 Event::MouseButtonDown {
                     mouse_btn: MouseButton::Left,
-                    x,
                     ..
-                } => { println!("{}", calc_result(opt.floating, opt.width, opt.start, opt.end, x)); break 'running },
+                } => { println!("{}", calc_result(opt.floating, opt.width, opt.start, opt.end, fill_pixels)); break 'running },
                 _ => {},
             }
         }
