@@ -23,7 +23,7 @@ The =--command= or =-c= option expects a string which is just text that will be 
 *** Examples
 Set the volume for your default device using =amixer=.
 #+begin_src sh
-dbar -c "amixer -D pulse set Master %v
+dbar -c "amixer -D pulse set Master %v%"
 #+end_src
 ** Using dbar statically
 *** Examples
