@@ -118,7 +118,7 @@ pub fn main() -> Result<(), String> {
             } else if opt.no_mouse_capture {
                 fill_pixels = events.mouse_state().x();
             } else {        // otherwise compute using mouse movement
-                fill_pixels = fill_pixels + mouse_movement;
+                fill_pixels += mouse_movement;
                 fill_pixels = if fill_pixels > opt.width as i32 { opt.width as i32 }
                               else if fill_pixels < 0 { 0 }
                               else { fill_pixels }
@@ -135,11 +135,18 @@ pub fn main() -> Result<(), String> {
             if !opt.command.is_empty() {
                 let current_cmd =
                     &opt.command.replace("%v", &calc_result(opt.floating, opt.width, opt.start, opt.end, fill_pixels).to_string());
-                Command::new("sh")
-                    .arg("-c")
-                    .arg(current_cmd)
-                    .spawn()
-                    .expect("failed to run user command");
+                if cfg!(target_os = "windows") {
+                    Command::new("cmd")
+                            .args(&["/C", current_cmd])
+                            .spawn()
+                            .expect("failed to run user command");
+                } else {
+                    Command::new("sh")
+                            .arg("-c")
+                            .arg(current_cmd)
+                            .spawn()
+                            .expect("failed to run user command");
+                }
             }
         }
 
