@@ -93,6 +93,15 @@ pub fn main() -> Result<(), String> {
     let mut fill_pixels = 0;
     let mut first_draw = true;
     'running: loop {
+
+        // Lazily evaluate the bar value for potential reuse
+        let mut dbar_value = LazyResult::new(|floating: bool, width: u32, start: f32, end: f32, x: i32| {
+            let range = (end - start).abs();
+            let result = start + range * (x as f32 / (width-1) as f32); // width-1 to account for 0th pixel
+            if floating { result }
+            else { result.round() }
+        });
+
         for event in events.poll_iter() {
             match event {
                 Event::KeyDown {
@@ -103,7 +112,7 @@ pub fn main() -> Result<(), String> {
                 Event::MouseButtonDown {
                     mouse_btn: MouseButton::Left,
                     ..
-                } => { println!("{}", calc_result(opt.floating, opt.width, opt.start, opt.end, fill_pixels)); break 'running },
+                } => { println!("{}", dbar_value.value(opt.floating, opt.width, opt.start, opt.end, fill_pixels)); break 'running },
                 _ => {},
             }
         }
@@ -134,7 +143,7 @@ pub fn main() -> Result<(), String> {
             // ...and execute the user command if it was provided
             if !opt.command.is_empty() {
                 let current_cmd =
-                    &opt.command.replace("%v", &calc_result(opt.floating, opt.width, opt.start, opt.end, fill_pixels).to_string());
+                    &opt.command.replace("%v", &dbar_value.value(opt.floating, opt.width, opt.start, opt.end, fill_pixels).to_string());
                 if cfg!(target_os = "windows") {
                     Command::new("cmd")
                             .args(&["/C", current_cmd])
@@ -156,11 +165,37 @@ pub fn main() -> Result<(), String> {
     Ok(())
 }
 
-fn calc_result(floating: bool, width: u32, start: f32, end: f32, x: i32) -> f32 {
-    let range = (end - start).abs();
-    let result = start + range * (x as f32 / (width-1) as f32); // need width-1 because we count the 0th pixel
-    if floating { result }
-    else { result.round() }
+// Struct for memoizing the bar result
+struct LazyResult<T>
+where
+    T: Fn(bool, u32, f32, f32, i32) -> f32
+{
+    calculation: T,
+    value: Option<f32>,
+}
+
+impl<T> LazyResult<T>
+where
+    T: Fn(bool, u32, f32, f32, i32) -> f32
+{
+    fn new(calculation: T) -> LazyResult<T> {
+        LazyResult {
+            calculation,
+            value: None,
+        }
+    }
+
+    // Only run the calculation if we haven't set the value before
+    fn value(&mut self, floating: bool, width: u32, start: f32, end: f32, x: i32) -> f32 {
+        match self.value {
+            Some(v) => v,
+            None => {
+                let v = (self.calculation)(floating, width, start, end, x);
+                self.value = Some(v);
+                v
+            }
+        }
+    }
 }
 
 // Parses a color hex code of the form '#rRgGbB..' into sdl2::pixels::Color
