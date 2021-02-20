@@ -15,6 +15,7 @@
 
 extern crate sdl2;
 
+use std::collections::HashMap;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
@@ -93,18 +94,17 @@ pub fn main() -> Result<(), String> {
         sdl_context.mouse().set_relative_mouse_mode(true);
     }
 
+    // Lazily evaluate the bar value for potential reuse
+    let mut dbar_value = LazyResult::new(|floating: bool, width: u32, start: f32, end: f32, x: i32| {
+        let range = (end - start).abs();
+        let result = start + range * (x as f32 / (width) as f32); // width-1 to account for 0th pixel
+        if floating { result }
+        else { result.round() }
+    });
+
     let mut fill_pixels = 0;
     let mut first_draw = true;
     'running: loop {
-
-        // Lazily evaluate the bar value for potential reuse
-        let mut dbar_value = LazyResult::new(|floating: bool, width: u32, start: f32, end: f32, x: i32| {
-            let range = (end - start).abs();
-            let result = start + range * (x as f32 / (width-1) as f32); // width-1 to account for 0th pixel
-            if floating { result }
-            else { result.round() }
-        });
-
         for event in events.poll_iter() {
             match event {
                 Event::KeyDown {
@@ -182,7 +182,7 @@ where
     T: Fn(bool, u32, f32, f32, i32) -> f32
 {
     calculation: T,
-    value: Option<f32>,
+    value: HashMap<i32, f32>,
 }
 
 impl<T> LazyResult<T>
@@ -192,20 +192,13 @@ where
     fn new(calculation: T) -> LazyResult<T> {
         LazyResult {
             calculation,
-            value: None,
+            value: HashMap::new(),
         }
     }
 
     // Only run the calculation if we haven't set the value before
     fn value(&mut self, floating: bool, width: u32, start: f32, end: f32, x: i32) -> f32 {
-        match self.value {
-            Some(v) => v,
-            None => {
-                let v = (self.calculation)(floating, width, start, end, x);
-                self.value = Some(v);
-                v
-            }
-        }
+        *self.value.entry(x).or_insert((self.calculation)(floating, width, start, end, x))
     }
 }
 
