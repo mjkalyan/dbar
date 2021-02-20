@@ -63,6 +63,9 @@ struct Options {
 
     #[structopt(short, long, default_value = "dbar", help = "The window title")]
     title: String,
+
+    #[structopt(short = "v", long, help = "Display the current value in the bar title")]
+    show_value: bool,
 }
 
 pub fn main() -> Result<(), String> {
@@ -133,14 +136,22 @@ pub fn main() -> Result<(), String> {
                               else { fill_pixels }
             }
 
-            // Render the bar...
+            // Render the bar
             canvas.set_draw_color(string_to_color(&opt.bg_col[..]).unwrap());
             canvas.clear();
             canvas.set_draw_color(string_to_color(&opt.fg_col[..]).unwrap());
-            canvas.fill_rect(Rect::new(0, 0, (fill_pixels) as u32, opt.height)).expect("failed to draw rectangle");
+            canvas.fill_rect(Rect::new(0, 0, (fill_pixels) as u32, opt.height))
+                  .expect("failed to draw rectangle");
             canvas.present();
 
-            // ...and execute the user command if it was provided
+            // Write value to window title if requested
+            if opt.show_value {
+                let title_update = opt.title.clone() + " - "
+                    + &dbar_value.value(opt.floating, opt.width, opt.start, opt.end, fill_pixels).to_string();
+                canvas.window_mut().set_title(&title_update).unwrap();
+            }
+
+            // And execute the user command if provided
             if !opt.command.is_empty() {
                 let current_cmd =
                     &opt.command.replace("%v", &dbar_value.value(opt.floating, opt.width, opt.start, opt.end, fill_pixels).to_string());
