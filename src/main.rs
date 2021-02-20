@@ -97,7 +97,7 @@ pub fn main() -> Result<(), String> {
     // Lazily evaluate the bar value for potential reuse
     let mut dbar_value = LazyResult::new(|floating: bool, width: u32, start: f32, end: f32, x: i32| {
         let range = (end - start).abs();
-        let result = start + range * (x as f32 / (width) as f32); // width-1 to account for 0th pixel
+        let result = start + range * (x as f32 / width as f32);
         if floating { result }
         else { result.round() }
     });
