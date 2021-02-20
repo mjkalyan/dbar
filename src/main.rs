@@ -75,6 +75,8 @@ pub fn main() -> Result<(), String> {
     // - start must be smaller than end
     // - width and height must be greater than 0
     // - colours must be valid hex codes
+    let bg_col = string_to_color(&opt.bg_col[..]).unwrap();
+    let fg_col = string_to_color(&opt.fg_col[..]).unwrap();
 
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
@@ -137,9 +139,9 @@ pub fn main() -> Result<(), String> {
             }
 
             // Render the bar
-            canvas.set_draw_color(string_to_color(&opt.bg_col[..]).unwrap());
+            canvas.set_draw_color(bg_col);
             canvas.clear();
-            canvas.set_draw_color(string_to_color(&opt.fg_col[..]).unwrap());
+            canvas.set_draw_color(fg_col);
             canvas.fill_rect(Rect::new(0, 0, (fill_pixels) as u32, opt.height))
                   .expect("failed to draw rectangle");
             canvas.present();
