@@ -15,13 +15,14 @@
 
 extern crate sdl2;
 
-use std::collections::HashMap;
+use regex::Regex;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::WindowCanvas;
+use std::collections::HashMap;
 use std::process::Command;
 use std::time::Duration;
 use structopt::StructOpt;
@@ -30,7 +31,6 @@ use structopt::StructOpt;
 #[derive(StructOpt)]
 #[structopt(about = "Just a slider bar. Left click to select a value in the given (inclusive) range from <start> to <end>. Continuously execute a command with --command. ESC to cancel.")]
 struct Options {
-    // TODO handle -negative input
     #[structopt(default_value = "0")]
     start: f32,
 
@@ -65,18 +65,18 @@ struct Options {
     #[structopt(short, long, default_value = "dbar", help = "The window title")]
     title: String,
 
-    #[structopt(short = "v", long, help = "Display the current value in the bar title")]
+    #[structopt(short = "v", long, help = "Display the current bar value in the window title")]
     show_value: bool,
 }
 
 pub fn main() -> Result<(), String> {
     let opt = Options::from_args(); // Parse command line options
-    // TODO sanitize input:
-    // - start must be smaller than end
-    // - width and height must be greater than 0
-    // - colours must be valid hex codes
-    let bg_col = string_to_color(&opt.bg_col[..]).unwrap();
-    let fg_col = string_to_color(&opt.fg_col[..]).unwrap();
+    // Sanitize inputs
+    // - TODO handle negative numbers in range
+    assert!(opt.start < opt.end, "<start> = {} must be smaller than <end> = {}", opt.start, opt.end);
+    assert!(opt.width > 1 || opt.height > 1, "<width> = {} and <height> = {} must be greater than 0", opt.width, opt.height);
+    let bg_col = string_to_color(&opt.bg_col[..]);
+    let fg_col = string_to_color(&opt.fg_col[..]);
 
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
@@ -204,11 +204,16 @@ where
     }
 }
 
-// Parses a color hex code of the form '#rRgGbB..' into sdl2::pixels::Color
-fn string_to_color(hex_code: &str) -> Result<Color, std::num::ParseIntError> {
-    let r: u8 = u8::from_str_radix(&hex_code[1..3], 16)?;
-    let g: u8 = u8::from_str_radix(&hex_code[3..5], 16)?;
-    let b: u8 = u8::from_str_radix(&hex_code[5..7], 16)?;
+fn string_to_color(hex_code: &str) -> Color {
+    // Check whether the string is a valid hex colour code
+    let re = Regex::new(r"^#[a-f,A-F,0-9]{6}").unwrap();
+    if ! re.is_match(hex_code) {
+        panic!("Invalid hex colour code: {}", hex_code);
+    }
 
-    Ok(Color::RGB(r, g, b))
+    let r: u8 = u8::from_str_radix(&hex_code[1..3], 16).unwrap();
+    let g: u8 = u8::from_str_radix(&hex_code[3..5], 16).unwrap();
+    let b: u8 = u8::from_str_radix(&hex_code[5..7], 16).unwrap();
+
+    Color::RGB(r, g, b)
 }

@@ -15,3 +15,4 @@ version = "0.1.0"
 [dependencies]
 sdl2 = ">=0.34.3"
 structopt = ">=0.3.13"
+regex = "1"
