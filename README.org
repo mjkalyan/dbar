@@ -1,5 +1,7 @@
 #+TITLE: dbar
-A simple, dynamic value-picker bar inspired by dmenu
+#+SETUPFILE: https://raw.githubusercontent.com/paulzql/org-html-themes/master/setup/theme-readtheorg.setup
+
+A simple value-picker bar inspired by dmenu
 
 * TODO Installation
 ** Gentoo
@@ -20,27 +22,50 @@ There are 2 main ways to use /dbar/:
 
 My guess is most users will be looking for the first functionality as it provides a smooth slider experience, but there are some times you just want to pick a value once or you want to avoid recomputing a command a bunch of times.
 ** Using dbar dynamically
-The =--command= or =-c= option expects a string which is just text that will be entered into a shell after /dbar/ replaces any occurances of =%v= with the current bar value. Concretely, =dbar -c "echo %v"= will print the current value of the bar (in between 0 and 100 inclusively by default) whenever the mouse moves horizontally.
+The =--command= or =-c= option expects a string that will be entered into a shell after /dbar/ replaces any occurances of =%v= in the string with the current bar value. Concretely, =dbar -c "echo %v"= will print the current value of the bar (from 0 and 100 inclusively by default) whenever the mouse moves horizontally.
 
 *** Examples
-Set the Pulseaudio master volume using [[https://github.com/cdemoulins/pamixer][pamixer]]:
+**** Set the screen brightness with =xrandr=
+We use =-f= to use floating point values & set the minimum value to 0.3 so we don't accidentaly make our screen completely black. Also, presumably you don't want to exceed 100% brightness.
 #+begin_src sh
-dbar -i "0.$(pamixer --get-volume)" -c "pamixer --set-volume %v"
+dbar -c "xrandr --output <monitor> --brightness %v" 0.3 1 -f
+#+end_src
+
+**** Set the Pulseaudio master volume using [[https://github.com/cdemoulins/pamixer][pamixer]]:
+We use =-i= to set the initial bar position to the current volume.
+#+begin_src sh
+dbar -i 0.$(pamixer --get-volume) -c "pamixer --set-volume %v"
 #+end_src
 ** Using dbar statically
 *** Examples
-Assign a rating to each film in a file:
+**** Assign a rating to each film in a file:
+Given a file (films.txt) with a movie name on each line, we write a new file rating each of the movies from 1 to 6.
 #+begin_src sh
 echo -e "shrek\nshrek 2\npuss in boots" > films.txt
 while read line
     do
-        echo "$line rating:" $(dbar 1 6 -t "Rate the movie: $line") "golden eggs" >> ratings.txt
+        echo "$line rating:" $(dbar 1 6 -v -t "Rate the movie: $line") "golden eggs" >> ratings.txt
     done < films.txt
 #+end_src
+
+**** Seek to a position in the current song (playing with [[https://musicpd.org/][mpd]]+[[https://github.com/MusicPlayerDaemon/mpc][mpc]])
+#+begin_src sh :results output silent
+mpc seek $(dbar)%
+#+end_src
+** Tips
+*** Don't forget =-c=
+When choosing a command/shell/interpreter to run with =--command=, make sure you invoke the right flag to produce your desired behaviour. For example, if you wanted to run some python code, you might consider using =python -c= to execute a one-off command (for =sh= and =bash= it's also =-c=). For something more complicated you could write a program or script in an arbitrary language and call that with dbar, the sky is the limit!
+*** Hotkeys
+When you write scripts or one-liners that make use of /dbar/, see if it makes sense to assign to a hotkey in your window manager or with a hotkey daemon like [[https://github.com/baskerville/sxhkd][sxhkd]], which I recommend.
 * TODO Dependencies
+See =cargo.toml=
+- SDL2
 * TODO TODOS
+- sanitize input
+- support ranges with negative numbers
 - make the shell a user choice or choose proper fallbacks for cross-platform use.
 - add the option to display some text on the bar
+  https://docs.rs/sdl2/0.34.3/sdl2/ttf/index.html
 - add the option to output display the current value on the bar (maybe with percentage based positions, so 0% 0% would be the top left of the bar, 50% 50% would be the middle of the bar, 0% -10% would be somewhere above the bar left-aligned)
 * License
 /dbar/ is distributed under the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GPL]].
