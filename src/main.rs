@@ -25,13 +25,13 @@ use sdl2::render::WindowCanvas;
 use std::collections::HashMap;
 use std::process::Command;
 use std::time::Duration;
-use structopt::StructOpt;
 use structopt::clap::AppSettings;
+use structopt::StructOpt;
 
 // Command line options
 #[derive(StructOpt)]
 #[structopt(
-    about = "A simple slider bar. Left click to select a value in the given (inclusive) range from <start> to <end>. Continuously execute a command with --command. ESC to cancel.",
+    about = "A simple slider bar. Left click to select a value in the (inclusive) range from <start> to <end>. Continuously execute a command with --command. ESC to cancel.",
     setting = AppSettings::AllowNegativeNumbers)]
 struct Options {
     #[structopt(default_value = "0")]

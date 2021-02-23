@@ -1,7 +1,7 @@
 #+TITLE: dbar
 #+SETUPFILE: https://raw.githubusercontent.com/paulzql/org-html-themes/master/setup/theme-readtheorg.setup
 
-A simple value-picker bar inspired by dmenu
+A simple cross-platform slider bar.
 
 * TODO COMMENT Code TODOS
 - sanitize input
