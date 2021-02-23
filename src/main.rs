@@ -26,10 +26,13 @@ use std::collections::HashMap;
 use std::process::Command;
 use std::time::Duration;
 use structopt::StructOpt;
+use structopt::clap::AppSettings;
 
 // Command line options
 #[derive(StructOpt)]
-#[structopt(about = "Just a slider bar. Left click to select a value in the given (inclusive) range from <start> to <end>. Continuously execute a command with --command. ESC to cancel.")]
+#[structopt(
+    about = "A simple slider bar. Left click to select a value in the given (inclusive) range from <start> to <end>. Continuously execute a command with --command. ESC to cancel.",
+    setting = AppSettings::AllowNegativeNumbers)]
 struct Options {
     #[structopt(default_value = "0")]
     start: f32,
@@ -72,9 +75,10 @@ struct Options {
 pub fn main() -> Result<(), String> {
     let opt = Options::from_args(); // Parse command line options
     // Sanitize inputs
-    // - TODO handle negative numbers in range
-    assert!(opt.start < opt.end, "<start> = {} must be smaller than <end> = {}", opt.start, opt.end);
-    assert!(opt.width > 1 || opt.height > 1, "<width> = {} and <height> = {} must be greater than 0", opt.width, opt.height);
+    assert!(opt.start < opt.end,
+            "<start> = {} must be smaller than <end> = {}", opt.start, opt.end);
+    assert!(opt.width > 1 || opt.height > 1,
+            "<width> = {} and <height> = {} must be greater than 0", opt.width, opt.height);
     let bg_col = string_to_color(&opt.bg_col[..]);
     let fg_col = string_to_color(&opt.fg_col[..]);
 
