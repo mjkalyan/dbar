@@ -3,17 +3,21 @@
 
 A simple value-picker bar inspired by dmenu
 
+* TODO COMMENT Code TODOS
+- sanitize input
+- support ranges with negative numbers
+- make the shell a user choice or choose proper fallbacks for cross-platform use.
+- add the option to output display the current value on the bar (maybe with percentage based positions, so 0% 0% would be the top left of the bar, 50% 50% would be the middle of the bar, 0% -10% would be somewhere above the bar left-aligned)
+  https://docs.rs/sdl2/0.34.3/sdl2/ttf/index.html
 * TODO Installation
 ** Gentoo
 ** Cargo
 * About
-I've always thought simple utilities which are easily integrated into scripts or chained together with other utilities were a joy to use. Many text-based shell utilities work like this - but, sadly, not many graphical programs share the same philosophy.
-
-/dbar/ is born of the idea that graphical programs can be simple and modular like a typical command line utility.
+Simple utilities which are easily integrated into scripts or chained together with other utilities are a joy to use. Text-based shell utilities often work like this, but, sadly, not many graphical programs share the same philosophy.
 
 /dbar/ is just a slider bar. It merely writes the selected value to stdout and, if using the =--command= / =-c= option, continuously plugs its current value into a user-defined shell command. It's up to you, the user, to decide what they want to do with the output or what command to give /dbar/ to run.
 * TODO Usage
-When in doubt, run =dbar -h= for a complete overview of the available commands.
+When in doubt, run =dbar -h= for an overview of the available commands.
 
 There are 2 main ways to use /dbar/:
 
@@ -22,17 +26,17 @@ There are 2 main ways to use /dbar/:
 
 My guess is most users will be looking for the first functionality as it provides a smooth slider experience, but there are some times you just want to pick a value once or you want to avoid recomputing a command a bunch of times.
 ** Using dbar dynamically
-The =--command= or =-c= option expects a string that will be entered into a shell after /dbar/ replaces any occurances of =%v= in the string with the current bar value. Concretely, =dbar -c "echo %v"= will print the current value of the bar (from 0 and 100 inclusively by default) whenever the mouse moves horizontally.
+The =--command= or =-c= option expects a string that will be entered into a shell after /dbar/ replaces any occurrences of =%v= in the string with the current bar value. Concretely, =dbar -c "echo %v"= will print the current value of the bar (from 0 to 100 inclusively by default) whenever the mouse moves horizontally.
 
 *** Examples
 **** Set the screen brightness with =xrandr=
-We use =-f= to use floating point values & set the minimum value to 0.3 so we don't accidentaly make our screen completely black. Also, presumably you don't want to exceed 100% brightness.
+Use =-f= to for floating point values. Set the minimum value to 0.3 so we don't accidentally make the screen pitch black and a maximum value of 1 avoid exceeding 100% brightness.
 #+begin_src sh
-dbar -c "xrandr --output <monitor> --brightness %v" 0.3 1 -f
+dbar -f -c "xrandr --output <monitor> --brightness %v" 0.3 1
 #+end_src
 
 **** Set the Pulseaudio master volume using [[https://github.com/cdemoulins/pamixer][pamixer]]:
-We use =-i= to set the initial bar position to the current volume.
+=-i= allows setting the initial bar position to the current volume.
 #+begin_src sh
 dbar -i 0.$(pamixer --get-volume) -c "pamixer --set-volume %v"
 #+end_src
@@ -49,25 +53,43 @@ while read line
 #+end_src
 
 **** Seek to a position in the current song (playing with [[https://musicpd.org/][mpd]]+[[https://github.com/MusicPlayerDaemon/mpc][mpc]])
+mpc allows seeking by percentage, so we need only get the output of a default /dbar/.
 #+begin_src sh :results output silent
 mpc seek $(dbar)%
 #+end_src
 ** Tips
 *** Don't forget =-c=
-When choosing a command/shell/interpreter to run with =--command=, make sure you invoke the right flag to produce your desired behaviour. For example, if you wanted to run some python code, you might consider using =python -c= to execute a one-off command (for =sh= and =bash= it's also =-c=). For something more complicated you could write a program or script in an arbitrary language and call that with dbar, the sky is the limit!
-*** Hotkeys
-When you write scripts or one-liners that make use of /dbar/, see if it makes sense to assign to a hotkey in your window manager or with a hotkey daemon like [[https://github.com/baskerville/sxhkd][sxhkd]], which I recommend.
+When choosing a shell/interpreter to run with /dbar/'s =--command=, make sure you invoke the right shell/interpreter flag to run a command. For example, if you wanted to run some python code directly, use =python -c= (for =sh= and =bash= it's also =-c=).
+
+e.g.
+#+begin_src sh
+dbar -c 'python -c "print(\"hello from python\", %v * 123)"'
+#+end_src
+Also note the usage of escaped quotations. Nesting commands involving strings can get messy in bash. If that's too troublesome, call /dbar/ from another language.
+*** Use Hotkeys!
+When you come up with interesting uses for /dbar/, bind them to a hotkey with your window manager or a hotkey daemon like [[https://github.com/baskerville/sxhkd][sxhkd]]. You'll have a nicely integrated and multi-purpose slider bar in no time :)
+*** Write scripts
+Don't be afraid to lift your /dbar/ calls into their own files when they get complicated.
+
+In the static examples above, we rated movies in a movie file, it's sensible to put that into its own file (let's say, =dbar_example.sh=) like so:
+#+begin_src sh
+#! /usr/bin/bash
+
+while read line
+    do
+        echo "$line rating:" $(dbar 1 6 -v -t "Rate the movie: $line") "golden eggs" >> $2
+    done < $1
+#+end_src
+And then call it with whatever parameters we like (where =$1= is the films file and =$2= is the output ratings file):
+#+begin_src sh
+dbar_example.sh more_films.txt ratings.txt
+#+end_src
+
+If all goes well, your imagination is the limit!
 * TODO Dependencies
 See =cargo.toml=
 - SDL2
-* TODO TODOS
-- sanitize input
-- support ranges with negative numbers
-- make the shell a user choice or choose proper fallbacks for cross-platform use.
-- add the option to display some text on the bar
-  https://docs.rs/sdl2/0.34.3/sdl2/ttf/index.html
-- add the option to output display the current value on the bar (maybe with percentage based positions, so 0% 0% would be the top left of the bar, 50% 50% would be the middle of the bar, 0% -10% would be somewhere above the bar left-aligned)
 * License
-/dbar/ is distributed under the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GPL]].
+/dbar/ is distributed under the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GPL]]. See the COPYING file included with dbar for a copy of the license.
 * Author
 *M. James Kalyan* - contact by [[mailto:james@searchforzero.com][email]]
