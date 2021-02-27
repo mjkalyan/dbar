@@ -101,10 +101,10 @@ pub fn main() -> Result<(), String> {
     }
 
     // Lazily evaluate the bar value for potential reuse
-    let mut dbar_value = LazyResult::new(|floating: bool, width: u32, start: f32, end: f32, x: i32| {
-        let range = (end - start).abs();
-        let result = start + range * (x as f32 / width as f32);
-        if floating { result }
+    let mut dbar_value = LazyResult::new(|x: i32| {
+        let range = (opt.end - opt.start).abs();
+        let result = opt.start + range * (x as f32 / opt.width as f32);
+        if opt.floating { result }
         else { result.round() }
     });
 
@@ -121,7 +121,7 @@ pub fn main() -> Result<(), String> {
                 Event::MouseButtonDown {
                     mouse_btn: MouseButton::Left,
                     ..
-                } => { println!("{}", dbar_value.value(opt.floating, opt.width, opt.start, opt.end, fill_pixels)); break 'running },
+                } => { println!("{}", dbar_value.value(fill_pixels)); break 'running },
                 _ => {},
             }
         }
@@ -153,14 +153,14 @@ pub fn main() -> Result<(), String> {
             // Write value to window title if requested
             if opt.show_value {
                 let title_update = opt.title.clone() + " - "
-                    + &dbar_value.value(opt.floating, opt.width, opt.start, opt.end, fill_pixels).to_string();
+                    + &dbar_value.value(fill_pixels).to_string();
                 canvas.window_mut().set_title(&title_update).unwrap();
             }
 
             // And execute the user command if provided
             if !opt.command.is_empty() {
                 let current_cmd =
-                    &opt.command.replace("%v", &dbar_value.value(opt.floating, opt.width, opt.start, opt.end, fill_pixels).to_string());
+                    &opt.command.replace("%v", &dbar_value.value(fill_pixels).to_string());
                 if cfg!(target_os = "windows") {
                     Command::new("cmd")
                             .args(&["/C", current_cmd])
@@ -185,7 +185,7 @@ pub fn main() -> Result<(), String> {
 // Struct for memoizing the bar result
 struct LazyResult<T>
 where
-    T: Fn(bool, u32, f32, f32, i32) -> f32
+    T: Fn(i32) -> f32
 {
     calculation: T,
     value: HashMap<i32, f32>,
@@ -193,7 +193,7 @@ where
 
 impl<T> LazyResult<T>
 where
-    T: Fn(bool, u32, f32, f32, i32) -> f32
+    T: Fn(i32) -> f32
 {
     fn new(calculation: T) -> LazyResult<T> {
         LazyResult {
@@ -203,8 +203,8 @@ where
     }
 
     // Only run the calculation if we haven't set the value before
-    fn value(&mut self, floating: bool, width: u32, start: f32, end: f32, x: i32) -> f32 {
-        *self.value.entry(x).or_insert((self.calculation)(floating, width, start, end, x))
+    fn value(&mut self, x: i32) -> f32 {
+        *self.value.entry(x).or_insert((self.calculation)(x))
     }
 }
 
