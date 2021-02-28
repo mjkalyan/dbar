@@ -108,6 +108,8 @@ pub fn main() -> Result<(), String> {
         else { result.round() }
     });
 
+
+    let mut last_val: Option<f32> = None;
     let mut fill_pixels = 0;
     let mut first_draw = true;
     'running: loop {
@@ -150,15 +152,25 @@ pub fn main() -> Result<(), String> {
                   .expect("failed to draw rectangle");
             canvas.present();
 
-            // Write value to window title if requested
-            if opt.show_value {
+            // Check if the current value computation is different from last iteration
+            let value_changed = if let Some(v) = last_val {
+                v != dbar_value.value(fill_pixels)
+            } else {
+                true
+            };
+
+            // Update last value for next time
+            if value_changed { last_val = Some(dbar_value.value(fill_pixels)); }
+
+            // Write value to window title if requested & the value has changed
+            if opt.show_value && value_changed {
                 let title_update = opt.title.clone() + " - "
                     + &dbar_value.value(fill_pixels).to_string();
                 canvas.window_mut().set_title(&title_update).unwrap();
             }
 
-            // And execute the user command if provided
-            if !opt.command.is_empty() {
+            // Execute user command if provided & the value has changed
+            if !opt.command.is_empty() && value_changed {
                 let current_cmd =
                     &opt.command.replace("%v", &dbar_value.value(fill_pixels).to_string());
                 if cfg!(target_os = "windows") {
