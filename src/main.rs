@@ -222,7 +222,13 @@ where
 
     // Only run the calculation if we haven't set the value before
     fn value(&mut self, x: i32) -> f32 {
-        *self.value.entry(x).or_insert((self.calculation)(x))
+        if self.value.contains_key(&x) {
+            self.value[&x]
+        } else {
+            let novel_value = (self.calculation)(x);
+            self.value.insert(x, novel_value);
+            novel_value
+        }
     }
 }
 
