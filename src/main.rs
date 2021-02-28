@@ -43,6 +43,9 @@ struct Options {
     #[structopt(short, long, default_value = "", help = "A string representing a shell command that will be run when the dbar value changes. Occurrences of `%v` in <command> will be replaced with dbar's current value.")]
     command: String,
 
+    #[structopt(short = "C", long, default_value = "", help = "Like --command but only execute <command> when a click occurs & do not exit the bar until ESC is hit")]
+    command_on_click: String,
+
     #[structopt(short, long, help = "Do not round the result to the nearest integer")]
     floating: bool,
 
@@ -113,6 +116,8 @@ pub fn main() -> Result<(), String> {
 
 
     let have_command = !opt.command.is_empty();
+    let have_coc = !opt.command_on_click.is_empty();
+    let on_windows = cfg!(target_os = "windows");
     let mut last_val: Option<f32> = None;
     let mut fill_pixels = 0;
     let mut first_draw = true;
@@ -129,7 +134,14 @@ pub fn main() -> Result<(), String> {
                 Event::MouseButtonDown {
                     mouse_btn: MouseButton::Left,
                     ..
-                } => { println!("{}", dbar_value.value(fill_pixels)); break 'running },
+                } => {
+                    if have_coc {
+                        run_command(&opt.command_on_click, dbar_value.value(fill_pixels), on_windows);
+                    } else {
+                        println!("{}", dbar_value.value(fill_pixels));
+                        break 'running
+                    }
+                },
                 _ => {},
             }
         }
@@ -180,20 +192,7 @@ pub fn main() -> Result<(), String> {
 
             // Execute user command if provided & the value has changed
             if have_command && value_changed {
-                let current_cmd =
-                    &opt.command.replace("%v", &dbar_value.value(fill_pixels).to_string());
-                if cfg!(target_os = "windows") {
-                    Command::new("cmd")
-                            .args(&["/C", current_cmd])
-                            .spawn()
-                            .expect("failed to run user command");
-                } else {
-                    Command::new("sh")
-                            .arg("-c")
-                            .arg(current_cmd)
-                            .spawn()
-                            .expect("failed to run user command");
-                }
+                run_command(&opt.command, dbar_value.value(fill_pixels), on_windows);
             }
         }
 
@@ -248,4 +247,21 @@ fn string_to_color(hex_code: &str) -> Color {
     let b: u8 = u8::from_str_radix(&hex_code[5..7], 16).unwrap();
 
     Color::RGB(r, g, b)
+}
+
+fn run_command(command: &String, value: f32, on_windows: bool) {
+    let current_cmd =
+        &command.replace("%v", &value.to_string());
+    if on_windows {
+        Command::new("cmd")
+                .args(&["/C", current_cmd])
+                .spawn()
+                .expect("failed to run user command");
+    } else {
+        Command::new("sh")
+                .arg("-c")
+                .arg(current_cmd)
+                .spawn()
+                .expect("failed to run user command");
+    }
 }
