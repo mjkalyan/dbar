@@ -70,6 +70,9 @@ struct Options {
 
     #[structopt(short = "v", long, help = "Display the current bar value in the window title")]
     show_value: bool,
+
+    #[structopt(short = "r", long, default_value = "15", help = "Milliseconds in between bar redraws - lower is faster but more compute intensive")]
+    refresh_rate: u64,
 }
 
 pub fn main() -> Result<(), String> {
@@ -194,7 +197,7 @@ pub fn main() -> Result<(), String> {
             }
         }
 
-        std::thread::sleep(Duration::from_millis(10));
+        std::thread::sleep(Duration::from_millis(opt.refresh_rate));
     }
 
     Ok(())
