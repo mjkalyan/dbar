@@ -19,20 +19,21 @@ Simple utilities which are easily integrated into scripts or chained together wi
 * TODO Usage
 When in doubt, run =dbar -h= for an overview of the available commands.
 
-There are 2 main ways to use /dbar/:
+There are 3 main ways to use /dbar/:
 
-1. Dynamically run a shell command every time the /dbar/ value changes
-2. Statically choose a value to plug into another program
+1. Dynamically run a shell command from /dbar/ every time the /dbar/ value changes
+2. Statically choose a single value to plug into another program
+3. Run a command like case 1 but every time you click instead of every time the value changes
 
-My guess is most users will be looking for the first functionality as it provides a smooth slider experience, but there are some times you just want to pick a value once or you want to avoid recomputing a command a bunch of times.
-** Using dbar dynamically
+My guess is most users will be looking for the first functionality as it provides smooth slider functionality, but there are some times you just want to pick a value once, avoid recomputing a command a bunch of times, or execute the same command with the same bar multiple times on demand.
+** Using /dbar/ dynamically
 The =--command= or =-c= option expects a string that will be entered into a shell after /dbar/ replaces any occurrences of =%v= in the string with the current bar value. Concretely, =dbar -c "echo %v"= will print the current value of the bar (from 0 to 100 inclusively by default) whenever the mouse moves horizontally.
 
 *** Examples
 **** Set the screen brightness with =xrandr=
 Use =-f= to for floating point values. Set the minimum value to 0.3 so we don't accidentally make the screen pitch black and a maximum value of 1 avoid exceeding 100% brightness.
 #+begin_src sh
-dbar -f -c "xrandr --output <monitor> --brightness %v" 0.3 1
+dbar -f -i 1 -c "xrandr --output <monitor> --brightness %v" 0.3 1
 #+end_src
 
 **** Set the Pulseaudio master volume using [[https://github.com/cdemoulins/pamixer][pamixer]]:
@@ -40,7 +41,8 @@ dbar -f -c "xrandr --output <monitor> --brightness %v" 0.3 1
 #+begin_src sh
 dbar -i 0.$(pamixer --get-volume) -c "pamixer --set-volume %v"
 #+end_src
-** Using dbar statically
+** Using /dbar/ statically
+/dbar/ can be used statically by retrieving its output via pipe (=dbar | foo=), command expansion (=$(dbar)=), etc.
 *** Examples
 **** Assign a rating to each film in a file:
 Given a file (films.txt) with a movie name on each line, we write a new file rating each of the movies from 1 to 6.
@@ -51,11 +53,27 @@ while read line
         echo "$line rating:" $(dbar 1 6 -v -t "Rate the movie: $line") "golden eggs" >> ratings.txt
     done < films.txt
 #+end_src
+** Execute a command every time you click
+With =--command-on-click= / =-C= /dbar/ will send a command (with the same format as =--command=) every time you click and will only exit when you press escape.
+*** Examples
+**** Seek to positions in the current song playing with [[https://musicpd.org/][mpd]]+[[https://github.com/MusicPlayerDaemon/mpc][mpc]]
+mpc allows seeking by percentage with =mpc seek <num>%=, so we need only append a % to the default output (0 -100) of /dbar/.
 
-**** Seek to a position in the current song (playing with [[https://musicpd.org/][mpd]]+[[https://github.com/MusicPlayerDaemon/mpc][mpc]])
-mpc allows seeking by percentage, so we need only get the output of a default /dbar/.
+We could use /dbar/ statically with
 #+begin_src sh :results output silent
 mpc seek $(dbar)%
+#+end_src
+but what if we wanted to seek to different positions in the song? This solution requires reloading /dbar/ over and over again each time we want to seek. Running /dbar/ dynamically doesn't work out that well either - we don't want to send the seek command every time the bar updates because it'll jumble our music and waste CPU resources.
+
+This looks like a job for =--command-on-click= (=-C=):
+#+begin_src sh
+dbar -C "mpc seek %v%" -t "MPC: Seek to a position in $(mpc current)"
+#+end_src
+This works exactly as we want, hooray! Also note we took advantage of being in a shell environment to put information about the currently running song into the /dbar/ window title.
+
+One might prefer to keep /dbar/ sitting around with =--no-mouse-capture= to have a song-seeking interface to mpd as long as /dbar/ is kept open:
+#+begin_src sh
+dbar -C "mpc seek %v%" --no-mouse-capture
 #+end_src
 ** Tips
 *** Don't forget =-c=
@@ -86,10 +104,11 @@ dbar_example.sh more_films.txt ratings.txt
 #+end_src
 
 If all goes well, your imagination is the limit!
+*** Use a higher refresh rate (lower =-r= setting) on high refresh rate displays if you notice /dbar/ is too jagged
 * TODO Dependencies
 See =cargo.toml=
 - SDL2
 * License
-/dbar/ is distributed under the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GPL]]. See the COPYING file included with dbar for a copy of the license.
+/dbar/ is distributed under the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GPL]]. See the COPYING file included with /dbar/ for a copy of the license.
 * Author
 *M. James Kalyan* - contact by [[mailto:james@searchforzero.com][email]]

@@ -40,7 +40,7 @@ struct Options {
     #[structopt(default_value = "100")]
     end: f32,
 
-    #[structopt(short, long, default_value = "", help = "A string representing a shell command that will be run when the dbar value changes. Occurrences of `%v` in <command> will be replaced with dbar's current value.")]
+    #[structopt(short, long, default_value = "", help = "A string representing a shell command that will be run when the dbar value changes. Occurrences of `%v` in <command> will be replaced with dbar's current value")]
     command: String,
 
     #[structopt(short = "C", long, default_value = "", help = "Like --command but only execute <command> when a click occurs & do not exit the bar until ESC is hit")]
@@ -74,7 +74,7 @@ struct Options {
     #[structopt(short = "v", long, help = "Display the current bar value in the window title")]
     show_value: bool,
 
-    #[structopt(short = "r", long, default_value = "15", help = "Milliseconds in between bar redraws - lower is faster but more compute intensive")]
+    #[structopt(short = "r", long, default_value = "15", help = "Milliseconds in between bar redraws - lower is smoother but more compute intensive")]
     refresh_rate: u64,
 }
 
