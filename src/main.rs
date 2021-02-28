@@ -109,9 +109,12 @@ pub fn main() -> Result<(), String> {
     });
 
 
+    let have_command = !opt.command.is_empty();
     let mut last_val: Option<f32> = None;
     let mut fill_pixels = 0;
     let mut first_draw = true;
+
+    // Main execution loop
     'running: loop {
         for event in events.poll_iter() {
             match event {
@@ -152,15 +155,18 @@ pub fn main() -> Result<(), String> {
                   .expect("failed to draw rectangle");
             canvas.present();
 
-            // Check if the current value computation is different from last iteration
-            let value_changed = if let Some(v) = last_val {
-                v != dbar_value.value(fill_pixels)
-            } else {
-                true
-            };
+            // Only compute last value in the cases it's used (-c || -v).
+            let value_changed = if have_command || opt.show_value {
+                // Check if the current value is different from last value
+                let changed = if let Some(v) = last_val {
+                    v != dbar_value.value(fill_pixels)
+                } else { true };
 
-            // Update last value for next time
-            if value_changed { last_val = Some(dbar_value.value(fill_pixels)); }
+                // Update last value for next time
+                if changed { last_val = Some(dbar_value.value(fill_pixels)); }
+                changed
+
+            } else { false }; // value_changed is unused ∴ return arbitrary bool
 
             // Write value to window title if requested & the value has changed
             if opt.show_value && value_changed {
@@ -170,7 +176,7 @@ pub fn main() -> Result<(), String> {
             }
 
             // Execute user command if provided & the value has changed
-            if !opt.command.is_empty() && value_changed {
+            if have_command && value_changed {
                 let current_cmd =
                     &opt.command.replace("%v", &dbar_value.value(fill_pixels).to_string());
                 if cfg!(target_os = "windows") {
