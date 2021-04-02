@@ -5,18 +5,15 @@ A simple cross-platform slider bar.
 
 * TODO COMMENT Code TODOS
 - sanitize input
-- support ranges with negative numbers
 - make the shell a user choice or choose proper fallbacks for cross-platform use.
-- add the option to output display the current value on the bar (maybe with percentage based positions, so 0% 0% would be the top left of the bar, 50% 50% would be the middle of the bar, 0% -10% would be somewhere above the bar left-aligned)
-  https://docs.rs/sdl2/0.34.3/sdl2/ttf/index.html
 * TODO Installation
 ** Gentoo
 ** Cargo
 * About
-Simple utilities which are easily integrated into scripts or chained together with other utilities are a joy to use. Text-based shell utilities often work like this, but, sadly, not many graphical programs share the same philosophy.
+Simple utilities which are easily integrated into scripts or chained together with other utilities are a joy to use. Text-based shell utilities often work like this but, sadly, not many graphical programs share the same philosophy.
 
-/dbar/ is just a slider bar. It merely writes the selected value to stdout and, if using the =--command= / =-c= option, continuously plugs its current value into a user-defined shell command. It's up to you, the user, to decide what they want to do with the output or what command to give /dbar/ to run.
-* TODO Usage
+Enter /dbar/: it's just a slider bar! It writes the selected value to stdout or plugs the value of the bar into a command supplied via =--command= / =-c= or =--command-on-click= / =-C=. It's up to you, the user, to decide what you want to do with the output or what command to give /dbar/.
+* Usage
 When in doubt, run =dbar -h= for an overview of the available commands.
 
 There are 3 main ways to use /dbar/:
@@ -36,13 +33,15 @@ Use =-f= to for floating point values. Set the minimum value to 0.3 so we don't 
 dbar -f -i 1 -c "xrandr --output <monitor> --brightness %v" 0.3 1
 #+end_src
 
-**** Set the Pulseaudio master volume using [[https://github.com/cdemoulins/pamixer][pamixer]]:
+Note: you should use =xbacklight= instead if your hardware supports it (nearly all modern laptops should support =xbacklight=). =xbacklight= changes the actual hardware brightness whereas =xrandr= only changes gamma on a software level.
+
+**** Set the Pulseaudio default device volume using [[https://github.com/cdemoulins/pamixer][pamixer]]:
 =-i= allows setting the initial bar position to the current volume.
 #+begin_src sh
-dbar -i 0.$(pamixer --get-volume) -c "pamixer --set-volume %v"
+dbar -v -i 0.$(pamixer --get-volume) -t "Volume Control" -c "pamixer --set-volume %v"
 #+end_src
 ** Using /dbar/ statically
-/dbar/ can be used statically by retrieving its output via pipe (=dbar | foo=), command expansion (=$(dbar)=), etc.
+/dbar/ can be used statically by retrieving its output via pipe (=dbar | foo=), command expansion (=foo $(dbar)=), etc.
 *** Examples
 **** Assign a rating to each film in a file:
 Given a file (films.txt) with a movie name on each line, we write a new file rating each of the movies from 1 to 6.
@@ -53,6 +52,7 @@ while read line
         echo "$line rating:" $(dbar 1 6 -v -t "Rate the movie: $line") "golden eggs" >> ratings.txt
     done < films.txt
 #+end_src
+Notice we use =-t= to set the window title such that we know what movie we are currently rating and =-v= to show the prospective value we will assign.
 ** Execute a command every time you click
 With =--command-on-click= / =-C= /dbar/ will send a command (with the same format as =--command=) every time you click and will only exit when you press escape.
 *** Examples
@@ -69,7 +69,7 @@ This looks like a job for =--command-on-click= (=-C=):
 #+begin_src sh
 dbar -C "mpc seek %v%" -t "MPC: Seek to a position in $(mpc current)"
 #+end_src
-This works exactly as we want, hooray! Also note we took advantage of being in a shell environment to put information about the currently running song into the /dbar/ window title.
+This works exactly as we want, hooray! Also note we took advantage of being in a shell environment to put information about the currently running song into the /dbar/ window title using =$(mpc current)=.
 
 One might prefer to keep /dbar/ sitting around with =--no-mouse-capture= to have a song-seeking interface to mpd as long as /dbar/ is kept open:
 #+begin_src sh
