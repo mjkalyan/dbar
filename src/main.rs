@@ -31,7 +31,7 @@ use structopt::StructOpt;
 // Command line options
 #[derive(StructOpt)]
 #[structopt(
-    about = "A simple slider bar. Left click to select a value in the (inclusive) range from <start> to <end>. Continuously execute a command with --command. ESC to cancel.",
+    about = "A simple slider bar. Left click to select a value in the (inclusive) range from <start> to <end>. Continuously execute a command with --command. Return to print the current value and exit regardless of options. ESC to cancel & return nothing.",
     setting = AppSettings::AllowNegativeNumbers)]
 struct Options {
     #[structopt(default_value = "0")]
@@ -116,7 +116,6 @@ pub fn main() -> Result<(), String> {
 
 
     let have_command = !opt.command.is_empty();
-    let have_coc = !opt.command_on_click.is_empty();
     let on_windows = cfg!(target_os = "windows");
     let mut last_val: Option<f32> = None;
     let mut fill_pixels = 0;
@@ -135,13 +134,20 @@ pub fn main() -> Result<(), String> {
                     mouse_btn: MouseButton::Left,
                     ..
                 } => {
-                    if have_coc {
+                    if !opt.command_on_click.is_empty() {
                         run_command(&opt.command_on_click, dbar_value.value(fill_pixels), on_windows);
                     } else {
                         println!("{}", dbar_value.value(fill_pixels));
                         break 'running
                     }
                 },
+                Event::KeyDown {
+                    keycode: Some(Keycode::Return),
+                    ..
+                } => {
+                    println!("{}", dbar_value.value(fill_pixels));
+                    break 'running
+                }
                 _ => {},
             }
         }
