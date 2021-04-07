@@ -56,10 +56,10 @@ struct Options {
     #[structopt(short = "y", long, default_value = "50", help = "Height of the window")]
     height: u32,
 
-    #[structopt(long, default_value = "#222244", help = "The background colour in #rrggbb hex format")]
+    #[structopt(long, default_value = "#e5e5e5", help = "The background colour in #rrggbb hex format")]
     bg_col: String,
 
-    #[structopt(long, default_value = "#9c99c3", help = "The bar colour in #rrggbb hex format")]
+    #[structopt(long, default_value = "#007fff", help = "The bar colour in #rrggbb hex format")]
     fg_col: String,
 
     #[structopt(long, help = "Do not capture/grab the mouse cursor")]
