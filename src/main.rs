@@ -15,7 +15,7 @@
 
 extern crate sdl2;
 
-use regex::Regex;
+use regex::{Regex, Captures};
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
@@ -256,17 +256,29 @@ fn string_to_color(hex_code: &str) -> Color {
 }
 
 fn run_command(command: &String, value: f32, on_windows: bool) {
-    let current_cmd =
-        &command.replace("%v", &value.to_string());
+    let re = Regex::new(r"%\(v([-|+|*|/])([0-9]+)\)").unwrap();
+    let substituted = re.replace_all(&command, |caps: &Captures| -> String {
+        let val = match &caps[1] {
+            "-" => value - &caps[2].parse::<f32>().unwrap(),
+            "+" => value + &caps[2].parse::<f32>().unwrap(),
+            "*" => value * &caps[2].parse::<f32>().unwrap(),
+            "/" => value / &caps[2].parse::<f32>().unwrap(),
+            _ => panic!("No valid operator in %(v) substitution!"),
+        };
+        val.to_string()
+    }).to_string();
+
+    let current_cmd = substituted.replace("%v", &value.to_string());
+
     if on_windows {
         Command::new("cmd")
-                .args(&["/C", current_cmd])
+                .args(&["/C", &current_cmd])
                 .spawn()
                 .expect("failed to run user command");
     } else {
         Command::new("sh")
                 .arg("-c")
-                .arg(current_cmd)
+                .arg(&current_cmd)
                 .spawn()
                 .expect("failed to run user command");
     }
