@@ -117,6 +117,10 @@ If all goes well, your imagination is the limit!
 * TODO Dependencies
 See =cargo.toml=
 - SDL2
+* Alternatives
+If you like dbar, you may also like:
++ The =--scale= option for =zenity=
+  This may be desireable if you never use =dbar='s =-c/-C= and/or you already have zenity installed.
 * License
 /dbar/ is distributed under the [[https://www.gnu.org/licenses/gpl-3.0.en.html][GPL]]. See the COPYING file included with /dbar/ for a copy of the license.
 * Author
