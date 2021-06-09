@@ -15,7 +15,7 @@
 
 extern crate sdl2;
 
-use regex::{Regex, Captures};
+use regex::{Captures, Regex};
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
@@ -40,10 +40,20 @@ struct Options {
     #[structopt(default_value = "100")]
     end: f32,
 
-    #[structopt(short, long, default_value = "", help = "A string representing a shell command that will be run when the dbar value changes. Occurrences of `%v` in <command> will be replaced with dbar's current value")]
+    #[structopt(
+        short,
+        long,
+        default_value = "",
+        help = "A string representing a shell command that will be run when the dbar value changes. Occurrences of `%v` in <command> will be replaced with dbar's current value"
+    )]
     command: String,
 
-    #[structopt(short = "C", long, default_value = "", help = "Like --command but only execute <command> when a click occurs & do not exit the bar until ESC is hit")]
+    #[structopt(
+        short = "C",
+        long,
+        default_value = "",
+        help = "Like --command but only execute <command> when a click occurs & do not exit the bar until ESC is hit"
+    )]
     command_on_click: String,
 
     #[structopt(short, long, help = "Do not round the result to the nearest integer")]
@@ -56,35 +66,66 @@ struct Options {
     #[structopt(short = "y", long, default_value = "50", help = "Height of the window")]
     height: u32,
 
-    #[structopt(long, default_value = "#e5e5e5", help = "The background colour in #rrggbb hex format")]
+    #[structopt(
+        long,
+        default_value = "#e5e5e5",
+        help = "The background colour in #rrggbb hex format"
+    )]
     bg_col: String,
 
-    #[structopt(long, default_value = "#007fff", help = "The bar colour in #rrggbb hex format")]
+    #[structopt(
+        long,
+        default_value = "#007fff",
+        help = "The bar colour in #rrggbb hex format"
+    )]
     fg_col: String,
 
     #[structopt(long, help = "Do not capture/grab the mouse cursor")]
     no_mouse_capture: bool,
 
-    #[structopt(short, long, default_value = "0.5", help = "The initial percentage of the bar filled as a float ∈ [0.0, 1.0]")]
+    #[structopt(
+        short,
+        long,
+        default_value = "0.5",
+        help = "The initial percentage of the bar filled as a float ∈ [0.0, 1.0]"
+    )]
     initial_percent: f32,
 
     #[structopt(short, long, default_value = "dbar", help = "The window title")]
     title: String,
 
-    #[structopt(short = "v", long, help = "Display the current bar value in the window title")]
+    #[structopt(
+        short = "v",
+        long,
+        help = "Display the current bar value in the window title"
+    )]
     show_value: bool,
 
-    #[structopt(short = "r", long, default_value = "15", help = "Milliseconds in between bar redraws - lower is smoother but more compute intensive")]
+    #[structopt(
+        short = "r",
+        long,
+        default_value = "15",
+        help = "Milliseconds in between bar redraws - lower is smoother but more compute intensive"
+    )]
     refresh_rate: u64,
 }
 
 pub fn main() -> Result<(), String> {
-    let opt = Options::from_args(); // Parse command line options
-    // Sanitize inputs
-    assert!(opt.start < opt.end,
-            "<start> = {} must be smaller than <end> = {}", opt.start, opt.end);
-    assert!(opt.width > 1 || opt.height > 1,
-            "<width> = {} and <height> = {} must be greater than 0", opt.width, opt.height);
+    // Parse & sanitize command line options
+    let opt = Options::from_args();
+    assert!(
+        opt.start < opt.end,
+        "<start> = {} must be smaller than <end> = {}",
+        opt.start,
+        opt.end
+    );
+    assert!(
+        opt.width > 1 || opt.height > 1,
+        "<width> = {} and <height> = {} must be greater than 0",
+        opt.width,
+        opt.height
+    );
+
     let bg_col = string_to_color(&opt.bg_col[..]);
     let fg_col = string_to_color(&opt.fg_col[..]);
 
@@ -97,9 +138,7 @@ pub fn main() -> Result<(), String> {
         .build()
         .map_err(|e| e.to_string())?;
 
-    let mut canvas : WindowCanvas = window.into_canvas()
-        .present_vsync()
-        .build().unwrap();
+    let mut canvas: WindowCanvas = window.into_canvas().present_vsync().build().unwrap();
 
     // Conditionally grab window/capture mouse
     if !opt.no_mouse_capture {
@@ -110,10 +149,12 @@ pub fn main() -> Result<(), String> {
     let mut dbar_value = LazyResult::new(|x: i32| {
         let range = (opt.end - opt.start).abs();
         let result = opt.start + range * (x as f32 / opt.width as f32);
-        if opt.floating { result }
-        else { result.round() }
+        if opt.floating {
+            result
+        } else {
+            result.round()
+        }
     });
-
 
     let have_command = !opt.command.is_empty();
     let on_windows = cfg!(target_os = "windows");
@@ -134,46 +175,56 @@ pub fn main() -> Result<(), String> {
                     mouse_btn: MouseButton::Left,
                     ..
                 } => {
-                    if !opt.command_on_click.is_empty() {
-                        run_command(&opt.command_on_click, dbar_value.value(fill_pixels), on_windows);
-                    } else {
+                    if opt.command_on_click.is_empty() {
                         println!("{}", dbar_value.value(fill_pixels));
-                        break 'running
+                        break 'running;
+                    } else {
+                        run_command(
+                            &opt.command_on_click,
+                            dbar_value.value(fill_pixels),
+                            on_windows,
+                        );
                     }
-                },
+                }
                 Event::KeyDown {
                     keycode: Some(Keycode::Return),
                     ..
                 } => {
                     println!("{}", dbar_value.value(fill_pixels));
-                    break 'running
+                    break 'running;
                 }
-                _ => {},
+                _ => {}
             }
         }
 
         // If the mouse moved or this is the first iteration
         let mouse_movement = events.relative_mouse_state().x();
         if (mouse_movement != 0) | first_draw {
-
-            if first_draw { // On 1st iteration, compute bar fill from initial %
+            if first_draw {
+                // On 1st iteration, compute bar fill from initial %
                 first_draw = false;
                 fill_pixels = (opt.initial_percent * opt.width as f32) as i32;
             } else if opt.no_mouse_capture {
                 fill_pixels = events.mouse_state().x();
-            } else {        // otherwise compute using mouse movement
+            } else {
+                // otherwise compute using mouse movement
                 fill_pixels += mouse_movement;
-                fill_pixels = if fill_pixels > opt.width as i32 { opt.width as i32 }
-                              else if fill_pixels < 0 { 0 }
-                              else { fill_pixels }
+                fill_pixels = if fill_pixels > opt.width as i32 {
+                    opt.width as i32
+                } else if fill_pixels < 0 {
+                    0
+                } else {
+                    fill_pixels
+                }
             }
 
             // Render the bar
             canvas.set_draw_color(bg_col);
             canvas.clear();
             canvas.set_draw_color(fg_col);
-            canvas.fill_rect(Rect::new(0, 0, (fill_pixels) as u32, opt.height))
-                  .expect("failed to draw rectangle");
+            canvas
+                .fill_rect(Rect::new(0, 0, (fill_pixels) as u32, opt.height))
+                .expect("failed to draw rectangle");
             canvas.present();
 
             // Only compute last value in the cases it's used (-c || -v).
@@ -181,18 +232,23 @@ pub fn main() -> Result<(), String> {
                 // Check if the current value is different from last value
                 let changed = if let Some(v) = last_val {
                     v != dbar_value.value(fill_pixels)
-                } else { true };
+                } else {
+                    true
+                };
 
                 // Update last value for next time
-                if changed { last_val = Some(dbar_value.value(fill_pixels)); }
+                if changed {
+                    last_val = Some(dbar_value.value(fill_pixels));
+                }
                 changed
-
-            } else { false }; // value_changed is unused ∴ return arbitrary bool
+            } else {
+                false
+            }; // value_changed is unused ∴ return arbitrary bool
 
             // Write value to window title if requested & the value has changed
             if opt.show_value && value_changed {
-                let title_update = opt.title.clone() + " - "
-                    + &dbar_value.value(fill_pixels).to_string();
+                let title_update =
+                    opt.title.clone() + " - " + &dbar_value.value(fill_pixels).to_string();
                 canvas.window_mut().set_title(&title_update).unwrap();
             }
 
@@ -211,7 +267,7 @@ pub fn main() -> Result<(), String> {
 // Struct for memoizing the bar result
 struct LazyResult<T>
 where
-    T: Fn(i32) -> f32
+    T: Fn(i32) -> f32,
 {
     calculation: T,
     value: HashMap<i32, f32>,
@@ -219,7 +275,7 @@ where
 
 impl<T> LazyResult<T>
 where
-    T: Fn(i32) -> f32
+    T: Fn(i32) -> f32,
 {
     fn new(calculation: T) -> LazyResult<T> {
         LazyResult {
@@ -236,7 +292,7 @@ where
                 self.value.insert(x, novel_value);
                 novel_value
             }
-            Some(v) => *v
+            Some(v) => *v,
         }
     }
 }
@@ -244,7 +300,7 @@ where
 fn string_to_color(hex_code: &str) -> Color {
     // Check whether the string is a valid hex colour code
     let re = Regex::new(r"^#[a-f,A-F,0-9]{6}").unwrap();
-    if ! re.is_match(hex_code) {
+    if !re.is_match(hex_code) {
         panic!("Invalid hex colour code: {}", hex_code);
     }
 
@@ -257,29 +313,31 @@ fn string_to_color(hex_code: &str) -> Color {
 
 fn run_command(command: &String, value: f32, on_windows: bool) {
     let re = Regex::new(r"%\(v([-|+|*|/])([0-9]+)\)").unwrap();
-    let substituted = re.replace_all(&command, |caps: &Captures| -> String {
-        let val = match &caps[1] {
-            "-" => value - &caps[2].parse::<f32>().unwrap(),
-            "+" => value + &caps[2].parse::<f32>().unwrap(),
-            "*" => value * &caps[2].parse::<f32>().unwrap(),
-            "/" => value / &caps[2].parse::<f32>().unwrap(),
-            _ => panic!("No valid operator in %(v) substitution!"),
-        };
-        val.to_string()
-    }).to_string();
+    let substituted = re
+        .replace_all(&command, |caps: &Captures| -> String {
+            let val = match &caps[1] {
+                "-" => value - &caps[2].parse::<f32>().unwrap(),
+                "+" => value + &caps[2].parse::<f32>().unwrap(),
+                "*" => value * &caps[2].parse::<f32>().unwrap(),
+                "/" => value / &caps[2].parse::<f32>().unwrap(),
+                _ => panic!("No valid operator in %(v) substitution!"),
+            };
+            val.to_string()
+        })
+        .to_string();
 
     let current_cmd = substituted.replace("%v", &value.to_string());
 
     if on_windows {
         Command::new("cmd")
-                .args(&["/C", &current_cmd])
-                .spawn()
-                .expect("failed to run user command");
+            .args(&["/C", &current_cmd])
+            .spawn()
+            .expect("failed to run user command");
     } else {
         Command::new("sh")
-                .arg("-c")
-                .arg(&current_cmd)
-                .spawn()
-                .expect("failed to run user command");
+            .arg("-c")
+            .arg(&current_cmd)
+            .spawn()
+            .expect("failed to run user command");
     }
 }
