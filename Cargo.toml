@@ -1,7 +1,7 @@
 [package]
 authors = ["James Kalyan <michaeljameskalyan@gmail.com>"]
 categories = ["command-line-utilities"]
-description = "A simple, cross-platform slider bar."
+description = "A simple, generic, cross-platform slider bar."
 documentation = "https://github.com/mjkalyan/dbar"
 edition = "2018"
 homepage = "https://github.com/mjkalyan/dbar"
@@ -10,7 +10,7 @@ license = "GPL-3.0"
 name = "dbar"
 readme = "README.org"
 repository = "https://github.com/mjkalyan/dbar"
-version = "0.1.0"
+version = "0.1.1"
 
 [dependencies]
 sdl2 = ">=0.34.3"
